@@ -46,4 +46,4 @@ Langkah-langkah menjalankan test coverage:
 Data hasil ETL pipeline juga disimpan ke dalam Google Sheets.
 
 URL Google Sheets: 
-[Masukkan URL Google Sheets di sini]
+https://fashion-studio.dicoding.dev/
