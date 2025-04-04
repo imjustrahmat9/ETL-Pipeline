@@ -1,7 +1,7 @@
+# Import pustaka eksternal yang dibutuhkan
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
-
 
 def extract_all_products(base_url: str, max_pages: int = 50):
     all_products = []
@@ -9,6 +9,7 @@ def extract_all_products(base_url: str, max_pages: int = 50):
     for page in range(1, max_pages + 1):
         url = base_url if page == 1 else f"{base_url}/page{page}"
         print(f"Scraping {url}")
+        
         response = requests.get(url)
         if response.status_code != 200:
             print(f"Gagal memuat halaman {page}. Status: {response.status_code}")
@@ -28,9 +29,11 @@ def extract_all_products(base_url: str, max_pages: int = 50):
                     print("Tidak ada detail produk, dilewati.")
                     continue
 
+                # Ambil nama produk
                 name_tag = details.find('h3', class_='product-title')
                 name = name_tag.text.strip() if name_tag else None
 
+                # Ambil harga produk
                 price_tag = details.find('span', class_='price')
                 if price_tag:
                     price = price_tag.text.strip()
@@ -38,6 +41,7 @@ def extract_all_products(base_url: str, max_pages: int = 50):
                     p_price_tag = details.find('p', class_='price')
                     price = p_price_tag.text.strip() if p_price_tag else None
 
+                # Ambil informasi tambahan (rating, warna, ukuran, gender)
                 all_p = details.find_all('p')
                 meta = []
 
