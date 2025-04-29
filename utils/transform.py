@@ -1,54 +1,41 @@
 import pandas as pd
 import re
 
-def full_cleaning_pipeline(raw_data: list[dict], kurs_dollar: int = 16000) -> list[dict]:
-    try:
-        # Fungsi untuk menghapus baris dengan data yang tidak valid
-        def hapus_baris_tidak_valid(df: pd.DataFrame) -> pd.DataFrame:
-            return df[
-                (df['Title'] != 'Unknown Product') &
-                (df['Price'] != 'Price Unavailable') &
-                (~df['Rating'].str.contains('Invalid Rating', na=False)) &
-                (~df['Rating'].str.contains('Not Rated', na=False))
-            ].copy()
+def transform_product_data(df):
+    if 'title' not in df.columns:
+        raise ValueError("Kolom 'title' tidak ditemukan dalam DataFrame.")
 
-        # Fungsi untuk membersihkan dan mengubah format nilai-nilai pada kolom tertentu
-        def transformasi_nilai(df: pd.DataFrame) -> pd.DataFrame:
-            # Ubah kolom harga dari string ke float dan konversi ke rupiah
-            df['Price'] = df['Price'].str.replace('$', '', regex=False).astype(float)
-            df['Price'] = df['Price'] * kurs_dollar
+    # Filter produk valid
+    df = df[df['title'] != 'Unknown Product']
+    df = df[df['rating'].str.contains(r'\d', na=False)]
+    df = df.drop_duplicates()
+    df = df.dropna()
 
-            # Ekstrak nilai rating numerik dari string
-            df['Rating'] = df['Rating'].apply(
-                lambda x: float(re.search(r"(\d+(\.\d+)?)", x).group()) if re.search(r"(\d+(\.\d+)?)", x) else None
-            )
+    # Ubah harga ke float dan kalikan dengan kurs IDR (contoh: 1 USD = 16,000)
+    def convert_price(price_str):
+        try:
+            return float(price_str.replace('$', '').replace(',', '')) * 16000
+        except:
+            return 0.0
 
-            # Ekstrak jumlah warna dari deskripsi
-            df['Colors'] = df['Colors'].apply(
-                lambda x: int(re.search(r"\d+", x).group()) if re.search(r"\d+", x) else None
-            )
+    df['price'] = df['price'].apply(convert_price)
 
-            # Bersihkan string ukuran dan gender
-            df['Size'] = df['Size'].str.replace('Size:', '', regex=False).str.strip()
-            df['Gender'] = df['Gender'].str.replace('Gender:', '', regex=False).str.strip()
+    # Ambil angka pertama dari string rating (contoh: "Rating: 4.5/5")
+    def extract_rating(rating_str):
+        match = re.search(r'\d+(\.\d+)?', rating_str)
+        return float(match.group()) if match else 0.0
 
-            # Hapus duplikat
-            df = df.drop_duplicates()
+    df['rating'] = df['rating'].apply(extract_rating)
 
-            return df
+    # Ambil jumlah warna dari string (contoh: "4 Colors")
+    def extract_colors(color_str):
+        match = re.search(r'\d+', color_str)
+        return int(match.group()) if match else 0
 
-        # Ubah data mentah menjadi DataFrame
-        df = pd.DataFrame(raw_data)
+    df['colors'] = df['colors'].apply(extract_colors)
 
-        # Tahap pembersihan data tidak valid
-        df_bersih = hapus_baris_tidak_valid(df)
+    # Bersihkan string ukuran dan gender
+    df['size'] = df['size'].apply(lambda x: x.split('Size: ')[-1].strip() if isinstance(x, str) and 'Size:' in x else '')
+    df['gender'] = df['gender'].apply(lambda x: x.split('Gender: ')[-1].strip() if isinstance(x, str) and 'Gender:' in x else '')
 
-        # Tahap transformasi nilai
-        df_akhir = transformasi_nilai(df_bersih)
-
-        # Kembalikan hasil sebagai list of dict
-        return df_akhir.to_dict(orient="records")
-
-    except Exception as e:
-        print(f"[ERROR] Gagal menjalankan full cleaning pipeline: {e}")
-        return []
+    return df

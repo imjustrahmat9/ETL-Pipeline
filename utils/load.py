@@ -1,45 +1,49 @@
-import pandas as pd
-import os
-import psycopg2
 import gspread
-from gspread_dataframe import set_with_dataframe
-from sqlalchemy import create_engine
-from dotenv import load_dotenv
+import logging
+import traceback
 from oauth2client.service_account import ServiceAccountCredentials
+from sqlalchemy import create_engine
 
-load_dotenv()
+# Setup logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def save_to_csv(data: list[dict], filename="products.csv"):
-    df = pd.DataFrame(data)
-    df.to_csv(filename, index=False)
-    print(f"[CSV] Data saved to {filename}")
+def load_to_csv(df, filename='products.csv'):
+    try:
+        df.to_csv(filename, index=False)
+        logging.info(f"Data berhasil disimpan ke file CSV: {filename}")
+    except Exception as e:
+        logging.error(f"Gagal menyimpan ke CSV: {e}")
+        logging.debug(traceback.format_exc())
 
-def save_to_existing_google_sheet(data: list[dict], spreadsheet_id: str, worksheet_index: int = 0):
-    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-    creds = ServiceAccountCredentials.from_json_keyfile_name("google-sheets-api.json", scope)
-    client = gspread.authorize(creds)
+def load_to_google_sheets(df, sheet_id, creds_file='your sheets api'):
+    import pandas as pd
+    try:
+        scope = [
+            "https://spreadsheets.google.com/feeds",
+            "https://www.googleapis.com/auth/drive"
+        ]
+        creds = ServiceAccountCredentials.from_json_keyfile_name(creds_file, scope)
+        client = gspread.authorize(creds)
+        sheet = client.open_by_key(sheet_id).sheet1
 
-    sheet = client.open_by_key(spreadsheet_id)
-    worksheet = sheet.get_worksheet(worksheet_index)
+        # ✅ Konversi semua datetime menjadi string (format ISO atau sesuaikan)
+        df = df.copy()
+        for col in df.columns:
+            if pd.api.types.is_datetime64_any_dtype(df[col]):
+                df[col] = df[col].astype(str)  # atau df[col].dt.strftime('%Y-%m-%d %H:%M:%S')
 
-    worksheet.clear()
+        sheet.clear()
+        sheet.update([df.columns.values.tolist()] + df.values.tolist())
+        logging.info("Data berhasil dimuat ke Google Sheets.")
+    except Exception as e:
+        logging.error(f"Gagal memuat data ke Google Sheets: {e}")
+        logging.debug(traceback.format_exc())
 
-    df = pd.DataFrame(data)
-    set_with_dataframe(worksheet, df)
-
-    print(f"[Google Sheets] Data berhasil ditulis ulang ke spreadsheet dengan nama Fashion Products")
-
-def save_to_postgresql(data: list[dict], table_name="products"):
-    df = pd.DataFrame(data)
-
-    db_host = os.getenv("DB_HOST")
-    db_port = os.getenv("DB_PORT")
-    db_name = os.getenv("DB_NAME")
-    db_user = os.getenv("DB_USER")
-    db_password = os.getenv("DB_PASSWORD")
-
-    db_url = f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
-    engine = create_engine(db_url)
-
-    df.to_sql(table_name, engine, if_exists="replace", index=False)
-    print(f"[PostgreSQL] Data uploaded to table: {table_name}")
+def load_to_postgresql(df, db_url, table_name='products'):
+    try:
+        engine = create_engine(db_url)
+        df.to_sql(table_name, engine, if_exists='replace', index=False)
+        logging.info(f"Data berhasil dimuat ke PostgreSQL table '{table_name}'.")
+    except Exception as e:
+        logging.error(f"Gagal memuat data ke PostgreSQL: {e}")
+        logging.debug(traceback.format_exc())

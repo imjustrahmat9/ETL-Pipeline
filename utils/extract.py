@@ -1,73 +1,60 @@
-# Import pustaka eksternal yang dibutuhkan
 import requests
 from bs4 import BeautifulSoup
-from datetime import datetime
+import pandas as pd
+import time
 
-def extract_all_products(base_url: str, max_pages: int = 50):
-    all_products = []
+BASE_URL = 'https://fashion-studio.dicoding.dev/'
 
-    for page in range(1, max_pages + 1):
-        url = base_url if page == 1 else f"{base_url}/page{page}"
-        print(f"Scraping {url}")
-        
-        response = requests.get(url)
-        if response.status_code != 200:
-            print(f"Gagal memuat halaman {page}. Status: {response.status_code}")
-            break
+def extract_product_data():
+    products = []
+    headers = {'User-Agent': 'Mozilla/5.0'}
 
-        soup = BeautifulSoup(response.text, 'html.parser')
-        product_cards = soup.find_all('div', class_='collection-card')
+    for page in range(1, 51):
+        try:
+            print(f"Memproses halaman {page}")
+            response = requests.get(f'{BASE_URL}?page={page}', headers=headers, timeout=10)
+            if response.status_code != 200:
+                print(f"Halaman {page} gagal dimuat.")
+                continue
 
-        if not product_cards:
-            print(f"Tidak ada produk di halaman {page}. Berhenti.")
-            break
+            soup = BeautifulSoup(response.text, 'html.parser')
+            product_elements = soup.find_all('div', class_='collection-card')
 
-        for card in product_cards:
-            try:
-                details = card.find('div', class_='product-details')
-                if details is None:
-                    print("Tidak ada detail produk, dilewati.")
-                    continue
+            if not product_elements:
+                print(f"Tidak ada produk di halaman {page}.")
+                continue
 
-                # Ambil nama produk
-                name_tag = details.find('h3', class_='product-title')
-                name = name_tag.text.strip() if name_tag else None
+            for product in product_elements:
+                try:
+                    # Judul produk
+                    title_tag = product.find('h3', class_='product-title')
+                    title = title_tag.text.strip() if title_tag else 'Unknown Product'
 
-                # Ambil harga produk
-                price_tag = details.find('span', class_='price')
-                if price_tag:
-                    price = price_tag.text.strip()
-                else:
-                    p_price_tag = details.find('p', class_='price')
-                    price = p_price_tag.text.strip() if p_price_tag else None
+                    # Harga
+                    price_tag = product.find('span', class_='price')
+                    price = price_tag.text.strip() if price_tag else '$0.00'
 
-                # Ambil informasi tambahan (rating, warna, ukuran, gender)
-                all_p = details.find_all('p')
-                meta = []
+                    # Info tambahan
+                    info_paragraphs = product.find_all('p')
+                    rating = next((p.text.strip() for p in info_paragraphs if 'Rating:' in p.text), 'Rating: 0')
+                    colors = next((p.text.strip() for p in info_paragraphs if 'Color' in p.text), '0 Colors')
+                    size = next((p.text.strip() for p in info_paragraphs if 'Size:' in p.text), 'Size: -')
+                    gender = next((p.text.strip() for p in info_paragraphs if 'Gender:' in p.text), 'Gender: -')
 
-                for p in all_p:
-                    if 'price' in p.get('class', []):
-                        continue
-                    meta.append(p.text.strip())
+                    # Tambahkan ke list
+                    products.append({
+                        'title': title,
+                        'price': price,
+                        'rating': rating,
+                        'colors': colors,
+                        'size': size,
+                        'gender': gender,
+                        'timestamp': pd.Timestamp.now()
+                    })
+                except Exception as e:
+                    print(f"Error parsing produk di halaman {page}: {e}")
+        except Exception as e:
+            print(f"Request ke halaman {page} gagal: {e}")
+        time.sleep(1)  # Agar tidak overload
 
-                rating = meta[0] if len(meta) > 0 else None
-                colors = meta[1] if len(meta) > 1 else None
-                size = meta[2] if len(meta) > 2 else None
-                gender = meta[3] if len(meta) > 3 else None
-
-                product = {
-                    "Title": name,
-                    "Price": price,
-                    "Rating": rating,
-                    "Colors": colors,
-                    "Size": size,
-                    "Gender": gender,
-                    "Timestamp": datetime.now().isoformat()
-                }
-
-                all_products.append(product)
-
-            except Exception as e:
-                print(f"Error parsing product: {e}")
-
-    return all_products
+    return pd.DataFrame(products)
