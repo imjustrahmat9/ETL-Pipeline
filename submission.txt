@@ -1,49 +1,21 @@
-Submission: Panduan Menjalankan ETL Pipeline dan Unit Test
+Nama: Renaldi Endrawan  
+Email: mc129d5y1924@student.devacademy.id
+Link GitHub: https://github.com/renaldiendrawan/Fundamental-Pemrosesan-Data.git
 
-1. Cara Menjalankan Skrip ETL Pipeline
-ETL (Extract, Transform, Load) pipeline dalam proyek ini terdiri dari tiga bagian utama: Extract (Pengambilan Data), Transform (Pembersihan Data), dan Load (Penyimpanan Data).
+Proyek ini mengimplementasikan proses ETL dari situs Fashion Studio. Proses terdiri dari:  
+1. Extract: Mengambil 50 halaman data produk menggunakan BeautifulSoup.  
+2. Transform: Membersihkan data, konversi harga, parsing rating, warna, ukuran, dan gender.  
+3. Load: Menyimpan hasil ke file CSV, Google Sheets, dan PostgreSQL.  
 
-Langkah-langkah menjalankan ETL pipeline:
-1. Pastikan semua dependensi telah diinstal dengan menjalankan perintah berikut:
-   pip install -r requirements.txt
-2. Jalankan skrip utama untuk mengeksekusi pipeline ETL:
-   python main.py
-   Skrip ini akan:
-   - Mengambil data produk dari situs yang telah ditentukan.
-   - Membersihkan dan memproses data menggunakan full_cleaning_pipeline.
-   - Menyimpan data ke berbagai sumber seperti CSV, Google Sheets, dan PostgreSQL.
+# Menjalankan skrip  
+py main.py  
 
-2. Cara Menjalankan Unit Test
-Unit test untuk setiap bagian pipeline ETL telah disediakan dalam direktori tests/.
+# Menjalankan unit test pada folder tests  
+py -m pytest tests  
 
-Menjalankan unit test:
-1. Pastikan berada di dalam direktori proyek.
-2. Gunakan pytest untuk menjalankan semua unit test:
-   pytest tests/
-3. Jika ingin menjalankan unit test untuk bagian tertentu, gunakan perintah berikut:
-   pytest tests/test_extract.py  (Untuk pengujian fungsi extract)
-   pytest tests/test_transform.py  (Untuk pengujian fungsi transform)
-   pytest tests/test_load.py  (Untuk pengujian fungsi load)
-4. Jika ingin melihat hasil dengan tampilan lebih detail, gunakan opsi -v:
-   pytest -v
+# Menjalankan test coverage pada folder tests  
+coverage run -m pytest tests  
+coverage report  
 
-3. Cara Menjalankan Test Coverage
-Test coverage digunakan untuk mengevaluasi seberapa banyak kode yang diuji oleh unit test.
-
-Langkah-langkah menjalankan test coverage:
-1. Instal coverage jika belum terinstal:
-   pip install coverage
-2. Jalankan perintah berikut untuk mengukur cakupan pengujian:
-   coverage run -m pytest
-3. Setelah pengujian selesai, buat laporan coverage dengan perintah berikut:
-   coverage report -m
-   Laporan ini akan menampilkan persentase kode yang diuji.
-4. Jika ingin melihat laporan dalam bentuk HTML, gunakan perintah berikut:
-   coverage html
-   Lalu buka file htmlcov/index.html di browser.
-
-4. URL Google Sheets
-Data hasil ETL pipeline juga disimpan ke dalam Google Sheets.
-
-URL Google Sheets: 
-https://fashion-studio.dicoding.dev/
+# URL Google Sheets:  
+https://docs.google.com/spreadsheets/d/1GwJy0AXTB6GNC2832ZNU3xIGAd7_USm6YVk8k4AbPeY/edit?gid=0#gid=0
