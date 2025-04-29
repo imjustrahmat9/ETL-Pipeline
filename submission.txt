@@ -1,6 +1,6 @@
 Nama: RAHMAT HIDAYAT 
 Email: mc013d5y1559@student.devacademy.id
-Link GitHub: https://github.com/renaldiendrawan/Fundamental-Pemrosesan-Data.git
+Link GitHub: https://github.com/imjustrahmat9/ETL-Pipeline/tree/main
 
 Proyek ini mengimplementasikan proses ETL dari situs Fashion Studio. Proses terdiri dari:  
 1. Extract: Mengambil 50 halaman data produk menggunakan BeautifulSoup.  
