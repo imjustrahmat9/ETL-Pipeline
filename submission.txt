@@ -2,10 +2,10 @@ Nama: RAHMAT HIDAYAT
 Email: mc013d5y1559@student.devacademy.id
 Link GitHub: https://github.com/imjustrahmat9/ETL-Pipeline/tree/main
 
-Proyek ini mengimplementasikan proses ETL dari situs Fashion Studio. Proses terdiri dari:  
-1. Extract: Mengambil 50 halaman data produk menggunakan BeautifulSoup.  
-2. Transform: Membersihkan data, konversi harga, parsing rating, warna, ukuran, dan gender.  
-3. Load: Menyimpan hasil ke file CSV, Google Sheets, dan PostgreSQL.  
+Proyek ini menerapkan proses ETL terhadap data dari situs Fashion Studio. Tahapan proses meliputi:
+a.  Extract: Mengambil data produk dari 50 halaman web dengan bantuan BeautifulSoup.
+b.  Transform: Melakukan pembersihan data serta mengubah format harga, mengurai informasi rating, warna, ukuran, dan kategori gender.
+c.  Load: Menyimpan data yang telah diproses ke dalam format CSV, Google Sheets, serta database PostgreSQL.
 
 # Menjalankan skrip  
 py main.py  
